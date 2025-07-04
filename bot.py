@@ -95,7 +95,7 @@ async def send_price_updates(app):
             await app.bot.send_message(chat_id=user_id, text=message, parse_mode="HTML")
             update_product_price(url, new_price)
         else:
-            # ✅ If price hasn't changed
+            # If price hasn't changed
             await app.bot.send_message(
                 chat_id=user_id,
                 text=f"No change: {title}"
