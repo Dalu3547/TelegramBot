@@ -42,23 +42,23 @@ class KaspiParser:
         driver = None
         try:
             if "kaspi.kz" not in url:
-                logger.error("❌ URL is not from kaspi.kz")
+                logger.error("URL is not from kaspi.kz")
                 return None, None
 
             driver = self._setup_driver()
-            logger.info(f"🌐 Opening: {url}")
+            logger.info(f"Opening: {url}")
             driver.get(url)
 
             time.sleep(5)  # Allow JavaScript to render content
 
             html = driver.page_source
 
-            # ✅ Debug save
+            # Debug save
             with open("kaspi_debug_forced.html", "w", encoding="utf-8") as f:
                 f.write(html)
-            logger.info("📝 HTML saved as kaspi_debug_forced.html")
+            logger.info("HTML saved as kaspi_debug_forced.html")
 
-            # ✅ Parse with BeautifulSoup
+            # Parse with BeautifulSoup
             soup = BeautifulSoup(html, "html.parser")
 
             # Find price from meta
@@ -83,7 +83,7 @@ class KaspiParser:
         finally:
             if driver:
                 driver.quit()
-                logger.info("🧹 Browser closed")
+                logger.info("Browser closed")
 
     def _extract_price(self, driver):
         price_selectors = [
