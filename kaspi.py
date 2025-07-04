@@ -37,50 +37,60 @@ class KaspiParser:
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
         return driver
-    
+
     def parse_product(self, url: str):
         driver = None
-        
         try:
-            logger.info(f"Начинаем парсинг товара: {url}")
-            
             if "kaspi.kz" not in url:
-                logger.error("Ссылка не является ссылкой на Kaspi.kz")
+                logger.error("❌ URL is not from kaspi.kz")
                 return None, None
-            
+
             driver = self._setup_driver()
-            
+            logger.info(f"🌐 Opening: {url}")
             driver.get(url)
-            logger.info("Загружаем страницу...")
-            
-            time.sleep(3)
-            
-            WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.TAG_NAME, "body"))
-            )
-            
-            price = self._extract_price(driver)
-            logger.info(f"Найденная цена: {price}")
-            
-            title = self._extract_title(driver)
-            logger.info(f"Найденное название: {title}")
-            
-            return price, title
-            
+
+            time.sleep(5)  # Allow JavaScript to render content
+
+            html = driver.page_source
+
+            # ✅ Debug save
+            with open("kaspi_debug_forced.html", "w", encoding="utf-8") as f:
+                f.write(html)
+            logger.info("📝 HTML saved as kaspi_debug_forced.html")
+
+            # ✅ Parse with BeautifulSoup
+            soup = BeautifulSoup(html, "html.parser")
+
+            # Find price from meta
+            price_tag = soup.find("meta", property="product:price:amount")
+            price = float(price_tag["content"]) if price_tag and price_tag.get("content") else None
+
+            # Find title from meta
+            title_tag = soup.find("meta", property="og:title")
+            title = title_tag["content"] if title_tag and title_tag.get("content") else "Unknown product"
+
+            if price:
+                logger.info(f"Price: {price}, Title: {title}")
+                return price, title
+            else:
+                logger.warning("Price not found.")
+                return None, None
+
         except Exception as e:
-            logger.error(f"Ошибка при парсинге {url}: {str(e)}")
+            logger.error(f"Error parsing Kaspi product: {str(e)}", exc_info=True)
             return None, None
-            
+
         finally:
             if driver:
                 driver.quit()
-                logger.info("Браузер закрыт")
-    
+                logger.info("🧹 Browser closed")
+
     def _extract_price(self, driver):
         price_selectors = [
             '.item__price-once',
             '[class*="price"]',
             '.item__price',
+            'meta[itemprop="price"]'
         ]
         
         for selector in price_selectors:
@@ -88,7 +98,7 @@ class KaspiParser:
                 elements = driver.find_elements(By.CSS_SELECTOR, selector)
                 
                 for element in elements:
-                    text = element.text.strip()
+                    text = element.text.strip() 
                     
                     if '₸' in text:
                         # Извлекаем числа из текста
@@ -136,7 +146,7 @@ class KaspiParser:
 if __name__ == "__main__":
     parser = KaspiParser()
 
-    url = "https://kaspi.kz/shop/p/apple-iphone-14-128gb-chernyi-102298404/?c=750000000" 
+    url = "https://kaspi.kz/shop/p/palatka-topcamping-t8-kempingovaja-kolichestvo-mest-10-korichnevyi-112077532/?m=17480191&ref=shared_link"
 
     price, title = parser.parse_product(url)
 
@@ -145,3 +155,4 @@ if __name__ == "__main__":
         print(f"Price: {price} ₸")
     else:
         print("Failed to parse product details.")
+    
