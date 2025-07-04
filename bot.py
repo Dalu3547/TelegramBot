@@ -9,7 +9,7 @@ from api.db import init_db, add_product, get_all_products, update_product_price
 import asyncio
 import nest_asyncio
 
-BOT_TOKEN = "7765941206:AAHEEqWZU1JIh0ZypRG5RZBQMbCQPrCzF88"
+BOT_TOKEN = "Telegram token"
 
 user_choices = {}
 kaspi_parser = KaspiParser()
